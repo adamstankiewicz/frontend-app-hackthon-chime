@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from 'react';
 import qs from 'qs';
 import {
   ConsoleLogger,
@@ -7,12 +6,9 @@ import {
   MeetingSessionConfiguration,
   MeetingSessionStatusCode,
   LogLevel,
-  VideoTileState,
-  VideoTile
 } from 'amazon-chime-sdk-js';
-import { Button } from '@edx/paragon';
 
-class ConversationManager {
+export default class ConversationManager {
   meetingId = null;
   audioVideo = null;
   canStartLocalVideo = true;
@@ -25,6 +21,7 @@ class ConversationManager {
   async joinMeeting() {
     const options = {
       title: this.meetingId,
+      name: 'test',
     };
     const response = await fetch(
       `${process.env.CHIME_BASE_URL}/join?${qs.stringify(options)}`,
@@ -133,66 +130,4 @@ class ConversationManager {
   log(str) {
     console.log(`[DEMO] ${str}`);
   }
-}
-
-let manager;
-
-export default function VideoConversationPage({
-  location: { search: queryString },
-}) {
-  const queryParams = qs.parse(queryString, { ignoreQueryPrefix: true });
-  const { m: meetingId } = queryParams;
-
-  const videoPreviewRef = useRef();
-  const [isJoined, setIsJoined] = useState(false);
-
-  useEffect(() => {
-    if (!manager) {
-      manager = new ConversationManager(meetingId);
-    }
-    return () => {
-      manager = null;
-    }
-  }, [meetingId]);
-
-  useEffect(() => {
-    const initialize = async () => {
-      await manager.initialize();
-      manager.audioVideo.startVideoPreviewForVideoInput(videoPreviewRef.current)
-    };
-    initialize();
-    return () => {
-      manager.audioVideo.stopVideoPreviewForVideoInput(videoPreviewRef.current)
-    };
-  }, [meetingId]);
-
-  async function handleJoinButtonClick() {
-    manager.audioVideo.stopVideoPreviewForVideoInput(videoPreviewRef.current)
-    await manager.join();
-    setIsJoined(true);
-  }
-
-  return (
-    <div className="container py-3">
-      <div className="row">
-        <div className="col">
-          <div className="row">
-            <div className="col-3">
-              <video id="video-preview" className="h-100 w-100" ref={videoPreviewRef} />
-            </div>
-          </div>
-          { !isJoined &&
-            <div className="d-flex justify-space-between">
-              <Button
-                className="btn-primary" 
-                onClick={async (e) => { await handleJoinButtonClick(e); } }
-              >
-                Join conversation
-              </Button>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  );
 }
