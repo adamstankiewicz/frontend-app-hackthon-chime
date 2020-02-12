@@ -13,7 +13,7 @@ export default function App() {
       <Router>
         <Header />
         <Switch>
-          <Route exact path="/join" component={VideoConversationPage} />
+          <Route exact path="/meeting/:meetingId" component={VideoConversationPage} />
         </Switch>
       </Router>
     </AppProvider>
