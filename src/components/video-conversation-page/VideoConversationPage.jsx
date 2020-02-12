@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import qs from 'qs';
 import {
   ConsoleLogger,
@@ -7,6 +7,8 @@ import {
   MeetingSessionConfiguration,
   MeetingSessionStatusCode,
   LogLevel,
+  VideoTileState,
+  VideoTile
 } from 'amazon-chime-sdk-js';
 import { Button } from '@edx/paragon';
 
@@ -142,6 +144,7 @@ export default function VideoConversationPage({
   const { m: meetingId } = queryParams;
 
   const videoPreviewRef = useRef();
+  const [isJoined, setIsJoined] = useState(false);
 
   useEffect(() => {
     if (!manager) {
@@ -166,6 +169,7 @@ export default function VideoConversationPage({
   async function handleJoinButtonClick() {
     manager.audioVideo.stopVideoPreviewForVideoInput(videoPreviewRef.current)
     await manager.join();
+    setIsJoined(true);
   }
 
   return (
@@ -177,14 +181,16 @@ export default function VideoConversationPage({
               <video id="video-preview" className="h-100 w-100" ref={videoPreviewRef} />
             </div>
           </div>
-          <div className="d-flex justify-space-between">
-            <Button
-              className="btn-primary" 
-              onClick={async (e) => { await handleJoinButtonClick(e); } }
-            >
-              Join conversation
-            </Button>
-          </div>
+          { !isJoined &&
+            <div className="d-flex justify-space-between">
+              <Button
+                className="btn-primary" 
+                onClick={async (e) => { await handleJoinButtonClick(e); } }
+              >
+                Join conversation
+              </Button>
+            </div>
+          }
         </div>
       </div>
     </div>
