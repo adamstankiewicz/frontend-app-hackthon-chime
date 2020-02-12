@@ -180,7 +180,7 @@ export default function VideoConversationPage({
           <div className="d-flex justify-space-between">
             <Button
               className="btn-primary" 
-              onClick={async (e) => { handleJoinButtonClick(e); } }
+              onClick={async (e) => { await handleJoinButtonClick(e); } }
             >
               Join conversation
             </Button>
