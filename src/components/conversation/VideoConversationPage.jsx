@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import classNames from 'classnames';
 import { AsyncScheduler } from 'amazon-chime-sdk-js';
 import { Button } from '@edx/paragon';
 
@@ -47,7 +48,6 @@ export default function VideoConversationPage() {
     new AsyncScheduler().start(
       async () => {
         await manager.join();
-        manager.audioVideo.stopVideoPreviewForVideoInput(videoPreviewRef.current);
       }
     );
   }
@@ -55,17 +55,18 @@ export default function VideoConversationPage() {
   return (
     <div className="container py-3">
       <div className="row">
-        <div className="col">
-          <div className="row">
-            <div className="col-12 col-lg-4 offset-lg-4">
-              <video id="video-preview" className="h-100 w-100" ref={videoPreviewRef} />
-            </div>
-          </div>
+        <div
+          className={classNames('col-12', {
+            'col-lg-6 offset-lg-3': !audioVideoDidStart,
+            'col-lg-6': audioVideoDidStart,
+          })}
+        >
+          <video id="video-preview" className="h-100 w-100" ref={videoPreviewRef} />
           {!audioVideoDidStart &&
-            <div className="text-center mt-3">
+            <div className="text-center">
               <Button
                 className="btn-primary" 
-                onClick={handleJoinButtonClick}
+                onClick={async (e) => { await handleJoinButtonClick(e); } }
               >
                 Join conversation
               </Button>
@@ -75,28 +76,38 @@ export default function VideoConversationPage() {
       </div>
       {audioVideoDidStart &&
         <>
-          <div className="row">
+          <div className="row mt-1">
             <div className="col">
-              <div className="tiles">
+              <div className="tiles d-flex" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
                 {[...Array(16)].map((_, index) => {
                   return (
                     <div
                       id={`tile-${index}`}
-                      className="bg-light text-center d-inline-block pr-1"
-                      style={{ width: 120 }}
+                      className="text-center pr-1"
+                      style={{ flex: '0 0 auto' }}
                     >
-                      <video className="bg-dark w-100 h-100" />
-                      <span className="text-white">{index}</span>
+                      <video className="bg-dark" />
+                      <div>{index}</div>
                     </div>
                   );
                 })}
               </div>
             </div>
           </div>
-            
-            {users.map((user) => {
-              return <p key={user.attendeeId}>{user.attendeeId}</p>
-            })}
+          <div className="row mt-3">
+            {users.length > 0 &&
+              <div className="row">
+                <div className="col">
+                  <h4>Attendee IDs</h4>
+                  <ul>
+                    {users.map((user) => {
+                      return <li key={user.attendeeId}>{user.attendeeId}</li>
+                    })}
+                  </ul>
+                </div>
+              </div>
+            }
+          </div>
         </>
       }
     </div>
