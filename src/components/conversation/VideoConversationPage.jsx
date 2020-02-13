@@ -66,7 +66,7 @@ export default function VideoConversationPage() {
             <div className="text-center">
               <Button
                 className="btn-primary" 
-                onClick={handleJoinButtonClick}
+                onClick={async (e) => { await handleJoinButtonClick(e); } }
               >
                 Join conversation
               </Button>
