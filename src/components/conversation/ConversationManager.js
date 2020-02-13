@@ -36,12 +36,10 @@ export default class ConversationManager {
     // if (json.error) {
     //   throw new Error(`Server error: ${json.error}`);
     // }
-    // 
     // return json;
     const response = await getHttpClient().get(
       `${process.env.MEETING_INFO_URL}/${this.meetingId}`
     );
-
     return response.data;
   }
 
@@ -77,10 +75,9 @@ export default class ConversationManager {
 
   setupSubscribeToAttendeeIdPresenceHandler() {
     const handler = (attendeeId, present) => {
-      this.log(`${attendeeId} present = ${present}`, this.roster);
+      this.log(`${attendeeId} present = ${present}`);
       if (!present) {
         delete this.roster[attendeeId];
-        return;
       } else {
         this.roster[attendeeId] = {};
       }

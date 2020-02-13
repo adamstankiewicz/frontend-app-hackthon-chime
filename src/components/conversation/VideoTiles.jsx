@@ -12,6 +12,7 @@ export default function VideoTiles() {
             const id = index + 1;
             return (
               <div
+                key={`tile-${id}`}
                 id={`tile-${id}`}
                 className="text-center pr-1"
                 style={{ flex: '0 0 auto', maxWidth: 160, display: 'none' }}

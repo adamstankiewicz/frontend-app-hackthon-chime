@@ -6,7 +6,7 @@ import { Button } from '@edx/paragon';
 
 import ConversationManager from './ConversationManager';
 import VideoTiles from './VideoTiles';
-import AttendeList from './AttendeeList';
+import AttendeeList from './AttendeeList';
 
 let manager;
 
@@ -15,7 +15,6 @@ export default function VideoConversationPage() {
   const videoPreviewRef = useRef();
   const [audioVideoDidStart, setAudioVideoDidStart] = useState(false);
   const [roster, setRoster] = useState({});
-  const [users, setUsers] = useState([]);
   const [isVideoActive, setIsVideoActive] = useState(false);
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function VideoConversationPage() {
       manager = new ConversationManager(
         meetingId,
         {
-          onUpdateRoster: newRoster => { setRoster(newRoster); },
+          onUpdateRoster: (newRoster) => { setRoster({ ...newRoster }); },
           onAudioVideoDidStart: () => { setAudioVideoDidStart(true); },
           onVideoTileDidUpdate: (tileState) => {
             const { tileId } = tileState;
@@ -43,17 +42,6 @@ export default function VideoConversationPage() {
       }
     );
   }, [meetingId]);
-
-  useEffect(() => {
-    const newUsers = [];
-    Object.keys(roster).forEach((key) => {
-      newUsers.push({
-        attendeeId: key,
-        ...roster[key],
-      });
-    });
-    setUsers(newUsers);
-  }, [roster]);
 
   useEffect(() => {
     if (manager) {
@@ -117,7 +105,7 @@ export default function VideoConversationPage() {
       {audioVideoDidStart &&
         <>
           <VideoTiles />
-          <AttendeList users={users} />
+          <AttendeeList attendees={roster} />
         </>
       }
     </div>
