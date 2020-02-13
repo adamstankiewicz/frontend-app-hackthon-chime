@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import qs from 'qs';
+import { useParams } from 'react-router-dom';
 import {
   ConsoleLogger,
   DefaultDeviceController,
@@ -7,9 +7,9 @@ import {
   MeetingSessionConfiguration,
   MeetingSessionStatusCode,
   LogLevel,
-  VideoTileState,
-  VideoTile
 } from 'amazon-chime-sdk-js';
+
+import { getAuthenticatedHttpClient as getHttpClient } from '@edx/frontend-platform/auth';
 import { Button } from '@edx/paragon';
 
 class ConversationManager {
@@ -23,20 +23,11 @@ class ConversationManager {
   }
 
   async joinMeeting() {
-    const options = {
-      title: this.meetingId,
-    };
-    const response = await fetch(
-      `${process.env.CHIME_BASE_URL}/join?${qs.stringify(options)}`,
-      {
-        method: 'POST',
-      }
+    const response = await getHttpClient().get(
+      `${process.env.MEETING_INFO_URL}/${this.meetingId}`
     );
-    const json = await response.json();
-    if (json.error) {
-      throw new Error(`Server error: ${json.error}`);
-    }
-    return json;
+
+    return response.data;
   }
 
   setupDeviceLabelTrigger() {
@@ -70,7 +61,7 @@ class ConversationManager {
   }
 
   async initialize() {
-    const joinInfo = (await this.joinMeeting()).JoinInfo;
+    const joinInfo = await this.joinMeeting();
     const logger = new ConsoleLogger('SDK', LogLevel.INFO);
     this.session = new DefaultMeetingSession(
       new MeetingSessionConfiguration(joinInfo.Meeting, joinInfo.Attendee),
@@ -137,14 +128,10 @@ class ConversationManager {
 
 let manager;
 
-export default function VideoConversationPage({
-  location: { search: queryString },
-}) {
-  const queryParams = qs.parse(queryString, { ignoreQueryPrefix: true });
-  const { m: meetingId } = queryParams;
-
+export default function VideoConversationPage() {
   const videoPreviewRef = useRef();
   const [isJoined, setIsJoined] = useState(false);
+  const { meetingId } = useParams();
 
   useEffect(() => {
     if (!manager) {
