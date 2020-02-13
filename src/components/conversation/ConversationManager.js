@@ -79,8 +79,7 @@ export default class ConversationManager {
       this.log(`${attendeeId} present = ${present}`);
       if (!present) {
         delete this.roster[attendeeId];
-      } else {
-        this.roster[attendeeId] = {};
+        return;
       }
       this.setupSubscribeToVolumeIndicator(attendeeId);
       this.setupActiveSpeakerDetector();
@@ -123,9 +122,7 @@ export default class ConversationManager {
           break; // only show the most active speaker
         }
       }
-      // TODO:
       this.handleUpdatedRoster();
-      // this.layoutVideoTiles();
     };
     this.audioVideo.subscribeToActiveSpeakerDetector(
       new DefaultActiveSpeakerPolicy(),
