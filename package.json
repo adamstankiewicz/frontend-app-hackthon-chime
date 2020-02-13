@@ -9,7 +9,10 @@
     "precommit": "npm run lint",
     "snapshot": "fedx-scripts jest --updateSnapshot",
     "start": "fedx-scripts webpack-dev-server --progress",
-    "test": "fedx-scripts jest --coverage --passWithNoTests"
+    "test": "fedx-scripts jest --coverage --passWithNoTests",
+    "open_app": "open http://localhost:8081",
+    "open_server": "open http://localhost:8080",
+    "open": "npm run open_app | npm run open_server"
   },
   "author": "edX",
   "license": "ISC",

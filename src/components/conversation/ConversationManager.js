@@ -1,3 +1,4 @@
+import qs from 'qs';
 import {
   ConsoleLogger,
   DefaultDeviceController,
@@ -8,8 +9,6 @@ import {
 } from 'amazon-chime-sdk-js';
 import { getAuthenticatedHttpClient as getHttpClient } from '@edx/frontend-platform/auth';
 
-import TileOrganizer from './TileOrganizer';
-
 export default class ConversationManager {
   meetingId = null;
   audioVideo = null;
@@ -17,7 +16,6 @@ export default class ConversationManager {
   roster = {};
   showActiveSpeakerScores = false;
   handlers = null;
-  tileOrganizer = new TileOrganizer();
 
   constructor(meetingId, handlers={}) {
     this.meetingId = meetingId;
@@ -25,6 +23,21 @@ export default class ConversationManager {
   }
 
   async joinMeeting() {
+    // FIXME: intentionally left here due to needing to run the node server temporarily
+    // const options = {
+    //   title: this.meetingId,
+    //   name: 'test',
+    // }
+    // const response = await fetch(
+    //   `${process.env.MEETING_INFO_URL}/join?${qs.stringify(options)}`,
+    //   { method: 'POST' }
+    // );
+    // const json = await response.json();
+    // if (json.error) {
+    //   throw new Error(`Server error: ${json.error}`);
+    // }
+    // 
+    // return json;
     const response = await getHttpClient().get(
       `${process.env.MEETING_INFO_URL}/${this.meetingId}`
     );
@@ -43,17 +56,17 @@ export default class ConversationManager {
 
   async chooseFirstVideoInputDevice() {
     const devices = await this.audioVideo.listVideoInputDevices()
-    await this.audioVideo.chooseVideoInputDevice(devices.pop().deviceId);
+    await this.audioVideo.chooseVideoInputDevice(devices.pop());
   }
 
   async chooseFirstAudioInputDevice() {
     const devices = await this.audioVideo.listAudioInputDevices()
-    await this.audioVideo.chooseAudioInputDevice(devices.pop().deviceId);
+    await this.audioVideo.chooseAudioInputDevice(devices.pop());
   }
 
   async chooseFirstAudioOutputDevice() {
     const devices = await this.audioVideo.listAudioOutputDevices()
-    await this.audioVideo.chooseAudioOutputDevice(devices.pop().deviceId);
+    await this.audioVideo.chooseAudioOutputDevice(devices.pop());
   }
 
   async chooseDevices() {
@@ -83,6 +96,8 @@ export default class ConversationManager {
   }
 
   async initialize() {
+    // FIXME: intentionally left here due to needing to run the node server temporarily
+    // const joinInfo = (await this.joinMeeting()).JoinInfo;
     const joinInfo = await this.joinMeeting();
     const logger = new ConsoleLogger('SDK', LogLevel.INFO);
     this.session = new DefaultMeetingSession(
@@ -116,12 +131,10 @@ export default class ConversationManager {
   }
 
   videoTileDidUpdate(tileState) {
-    this.log(`video tile updated: ${JSON.stringify(tileState)}`);
-    const tileIndex = tileState.localTile
-      ? 16
-      : this.tileOrganizer.acquireTileIndex(tileState.tileId);
-    const tileElement = document.getElementById(`tile-${tileIndex}`);
-    console.log('videoTileDidUpdate', tileElement);
+    this.log(`video tile updated: ${tileState.tileId}`);
+    if ('onVideoTileDidUpdate' in this.handlers) {
+      this.handlers.onVideoTileDidUpdate(tileState);
+    }
   }
 
   videoTileWasRemoved(tileId) {
@@ -130,7 +143,7 @@ export default class ConversationManager {
 
   videoAvailabilityDidChange(availability) {
     this.canStartLocalVideo = availability.canStartLocalVideo;
-    this.log(`video availability changed: canStartLocalVideo ${availability.canStartLocalVideo}`);
+    this.log(`video availability changed: canStartLocalVideo=${availability.canStartLocalVideo} remoteVideoAvailable=${availability.remoteVideoAvailable}`);
   }
 
   connectionDidBecomePoor() {
