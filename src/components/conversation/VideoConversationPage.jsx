@@ -16,7 +16,7 @@ export default function VideoConversationPage() {
   const [audioVideoDidStart, setAudioVideoDidStart] = useState(false);
   const [roster, setRoster] = useState({});
   const [isVideoActive, setIsVideoActive] = useState(false);
-  const [videoTileRefs, setVideoTileRefs] = useState({});
+  const refs = useRef([...Array(16)].map(() => { useRef(); }));
 
   useEffect(() => {
     if (!manager) {
@@ -26,9 +26,16 @@ export default function VideoConversationPage() {
           onUpdateRoster: (newRoster) => { setRoster({ ...newRoster }); },
           onAudioVideoDidStart: () => { setAudioVideoDidStart(true); },
           onVideoTileDidUpdate: (tileState) => {
-            const { tileId } = tileState;
-            manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
-            console.log('onVideoTileDidUpdate', tileId);
+            const { tileId, localTile } = tileState;
+            // FIXME: `onVideoTileDidUpdate` not called for remote video streams :(
+            // console.log('[onVideoTileDidUpdate]', tileState);
+            if (localTile) {
+              manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
+            } else {
+              // console.log('[onVideoTileDidUpdate]', refs.current[tileId]);
+              // console.log('[onVideoTileDidUpdate]', document.getElementById(`video-${tileId}`));
+              // console.log('[onVideoTileDidUpdate]', tileState);
+            }
           }
         }
       );
@@ -55,14 +62,14 @@ export default function VideoConversationPage() {
         }
       }
     }
-  }, [manager, isVideoActive])
+  }, [manager, isVideoActive]);
 
   function handleJoinButtonClick() {
     new AsyncScheduler().start(
       async () => {
-        await manager.join();
         manager.audioVideo.stopVideoPreviewForVideoInput(videoPrimaryRef.current);
-        await manager.chooseFirstVideoInputDevice();
+        await manager.join();
+        await manager.chooseFirstVideoInputDevice()
         manager.audioVideo.startLocalVideoTile();
       }
     );
@@ -101,7 +108,12 @@ export default function VideoConversationPage() {
           </div>
         }
       </div>
-      {audioVideoDidStart && <VideoTiles attendees={roster} />}
+      {audioVideoDidStart &&
+        <VideoTiles
+          attendees={roster} 
+          refs={refs}
+        />
+      }
     </div>
   );
 }
