@@ -5,6 +5,8 @@ import { AsyncScheduler } from 'amazon-chime-sdk-js';
 import { Button } from '@edx/paragon';
 
 import ConversationManager from './ConversationManager';
+import VideoTiles from './VideoTiles';
+import AttendeList from './AttendeeList';
 
 let manager;
 
@@ -14,6 +16,7 @@ export default function VideoConversationPage() {
   const [audioVideoDidStart, setAudioVideoDidStart] = useState(false);
   const [roster, setRoster] = useState({});
   const [users, setUsers] = useState([]);
+  const [isVideoActive, setIsVideoActive] = useState(false);
 
   useEffect(() => {
     if (!manager) {
@@ -22,6 +25,14 @@ export default function VideoConversationPage() {
         {
           onUpdateRoster: newRoster => { setRoster(newRoster); },
           onAudioVideoDidStart: () => { setAudioVideoDidStart(true); },
+          onVideoTileDidUpdate: (tileState) => {
+            const { tileId } = tileState;
+            // const tileElement = document.getElementById(`tile-${tileId}`);
+            // tileElement.style.display = 'block';
+            // const videoElement = document.getElementById(`video-${tileId}`);
+            manager.audioVideo.bindVideoElement(tileId, videoPreviewRef.current);
+            // manager.audioVideo.bindVideoElement(tileId, videoElement);
+          }
         }
       );
     }
@@ -33,7 +44,7 @@ export default function VideoConversationPage() {
     );
   }, [meetingId]);
 
-  useEffect(() =>{
+  useEffect(() => {
     const newUsers = [];
     Object.keys(roster).forEach((key) => {
       newUsers.push({
@@ -44,10 +55,29 @@ export default function VideoConversationPage() {
     setUsers(newUsers);
   }, [roster]);
 
-  async function handleJoinButtonClick() {
+  useEffect(() => {
+    if (manager) {
+      const startLocalVideoTile = async () => {
+        await manager.chooseFirstVideoInputDevice();
+        manager.audioVideo.startLocalVideoTile();
+      };
+      if (manager.audioVideo) {
+        if (isVideoActive) {
+          manager.audioVideo.stopLocalVideoTile();
+        } else {
+          startLocalVideoTile();
+        }
+      }
+    }
+  }, [manager, isVideoActive])
+
+  function handleJoinButtonClick() {
     new AsyncScheduler().start(
       async () => {
         await manager.join();
+        manager.audioVideo.stopVideoPreviewForVideoInput(videoPreviewRef.current);
+        await manager.chooseFirstVideoInputDevice();
+        manager.audioVideo.startLocalVideoTile();
       }
     );
   }
@@ -66,48 +96,28 @@ export default function VideoConversationPage() {
             <div className="text-center">
               <Button
                 className="btn-primary" 
-                onClick={async (e) => { await handleJoinButtonClick(e); } }
+                onClick={() => { handleJoinButtonClick(); } }
               >
                 Join conversation
               </Button>
             </div>
           }
         </div>
+        {audioVideoDidStart &&
+          <div className="col-12 col-lg-6">
+            <Button
+              className="btn-secondary"
+              onClick={() => { setIsVideoActive(!isVideoActive); }}
+            >
+              Toggle camera
+            </Button>
+          </div>
+        }
       </div>
       {audioVideoDidStart &&
         <>
-          <div className="row mt-1">
-            <div className="col">
-              <div className="tiles d-flex" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
-                {[...Array(16)].map((_, index) => {
-                  return (
-                    <div
-                      id={`tile-${index}`}
-                      className="text-center pr-1"
-                      style={{ flex: '0 0 auto' }}
-                    >
-                      <video className="bg-dark" />
-                      <div>{index}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className="row mt-3">
-            {users.length > 0 &&
-              <div className="row">
-                <div className="col">
-                  <h4>Attendee IDs</h4>
-                  <ul>
-                    {users.map((user) => {
-                      return <li key={user.attendeeId}>{user.attendeeId}</li>
-                    })}
-                  </ul>
-                </div>
-              </div>
-            }
-          </div>
+          <VideoTiles />
+          <AttendeList users={users} />
         </>
       }
     </div>
