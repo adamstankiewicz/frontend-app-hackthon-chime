@@ -8,14 +8,20 @@ import {
 } from 'amazon-chime-sdk-js';
 import { getAuthenticatedHttpClient as getHttpClient } from '@edx/frontend-platform/auth';
 
+import TileOrganizer from './TileOrganizer';
+
 export default class ConversationManager {
   meetingId = null;
   audioVideo = null;
   canStartLocalVideo = true;
-  cameraDeviceIds = [];
+  roster = {};
+  showActiveSpeakerScores = false;
+  handlers = null;
+  tileOrganizer = new TileOrganizer();
 
-  constructor(meetingId) {
-    this.meetingId = meetingId; 
+  constructor(meetingId, handlers={}) {
+    this.meetingId = meetingId;
+    this.handlers = handlers;
   }
 
   async joinMeeting() {
@@ -56,6 +62,26 @@ export default class ConversationManager {
     await this.chooseFirstVideoInputDevice()
   }
 
+  setupSubscribeToAttendeeIdPresenceHandler() {
+    const handler = (attendeeId, present) => {
+      this.log(`${attendeeId} present = ${present}`, this.roster);
+      if (!present) {
+        delete this.roster[attendeeId];
+        return;
+      } else {
+        this.roster[attendeeId] = {};
+      }
+      this.handleUpdatedRoster();
+    };
+    this.audioVideo.realtimeSubscribeToAttendeeIdPresence(handler);
+  }
+
+  handleUpdatedRoster() {
+    if ('onUpdateRoster' in this.handlers) {
+      this.handlers.onUpdateRoster(this.roster);
+    }
+  }
+
   async initialize() {
     const joinInfo = await this.joinMeeting();
     const logger = new ConsoleLogger('SDK', LogLevel.INFO);
@@ -67,6 +93,7 @@ export default class ConversationManager {
     this.audioVideo = this.session.audioVideo;
     this.setupDeviceLabelTrigger();
     await this.chooseDevices();
+    this.setupSubscribeToAttendeeIdPresenceHandler();
     this.audioVideo.addObserver(this);
   }
 
@@ -76,6 +103,9 @@ export default class ConversationManager {
 
   audioVideoDidStart() {
     this.log('session started');
+    if ('onAudioVideoDidStart' in this.handlers) {
+      this.handlers.onAudioVideoDidStart();
+    }
   }
 
   audioVideoDidStop(sessionStatus) {
@@ -87,6 +117,11 @@ export default class ConversationManager {
 
   videoTileDidUpdate(tileState) {
     this.log(`video tile updated: ${JSON.stringify(tileState)}`);
+    const tileIndex = tileState.localTile
+      ? 16
+      : this.tileOrganizer.acquireTileIndex(tileState.tileId);
+    const tileElement = document.getElementById(`tile-${tileIndex}`);
+    console.log('videoTileDidUpdate', tileElement);
   }
 
   videoTileWasRemoved(tileId) {
