@@ -17,7 +17,7 @@ export default function VideoTiles({
           id={`video-${tileId}`}
           className="w-100 h-100"
           style={{ maxWidth: 180 }}
-          ref={refs.current[tileId - 1]}
+          ref={refs[tileId - 1]}
         />
         <div>{tileId}</div>
       </div>

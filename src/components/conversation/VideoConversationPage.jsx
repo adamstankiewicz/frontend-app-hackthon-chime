@@ -16,7 +16,10 @@ export default function VideoConversationPage() {
   const [audioVideoDidStart, setAudioVideoDidStart] = useState(false);
   const [roster, setRoster] = useState({});
   const [isVideoActive, setIsVideoActive] = useState(false);
-  const refs = useRef([...Array(16)].map(() => { useRef(); }));
+  const refs = Array(16);
+  for (let i = 0; i < 16; i++) {
+    refs[i] = useRef();
+  }
 
   useEffect(() => {
     if (!manager) {
@@ -30,7 +33,10 @@ export default function VideoConversationPage() {
             // FIXME: `onVideoTileDidUpdate` not called for remote video streams :(
             // console.log('[onVideoTileDidUpdate]', tileState);
             if (localTile) {
-              manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
+              // manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
+              if (refs && refs[0].current) {
+                manager.audioVideo.bindVideoElement(tileId, refs[0].current);
+              }
             } else {
               manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
               // console.log('[onVideoTileDidUpdate]', refs.current[tileId]);
