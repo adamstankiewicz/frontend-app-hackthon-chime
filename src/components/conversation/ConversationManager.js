@@ -1,6 +1,7 @@
 import qs from 'qs';
 import {
   ConsoleLogger,
+  DefaultActiveSpeakerPolicy,
   DefaultDeviceController,
   DefaultMeetingSession,
   MeetingSessionConfiguration,
@@ -81,9 +82,55 @@ export default class ConversationManager {
       } else {
         this.roster[attendeeId] = {};
       }
+      this.setupSubscribeToVolumeIndicator(attendeeId);
+      this.setupActiveSpeakerDetector();
       this.handleUpdatedRoster();
     };
     this.audioVideo.realtimeSubscribeToAttendeeIdPresence(handler);
+  }
+
+  setupSubscribeToVolumeIndicator(attendeeId) {
+    this.audioVideo.realtimeSubscribeToVolumeIndicator(attendeeId, (
+      attendeeId,
+      volume,
+      muted,
+      signalStrength
+    ) => {
+      if (!this.roster[attendeeId]) {
+        this.roster[attendeeId] = {};
+      }
+      if (volume !== null) {
+        this.roster[attendeeId].volume = Math.round(volume * 100);
+      }
+      if (muted !== null) {
+        this.roster[attendeeId].muted = muted;
+      }
+      if (signalStrength !== null) {
+        this.roster[attendeeId].signalStrength = Math.round(signalStrength * 100);
+      }
+      this.handleUpdatedRoster();
+    });
+  }
+
+  setupActiveSpeakerDetector() {
+    const activeSpeakerHandler = (attendeeIds) => {
+      for (const attendeeId in this.roster) {
+        this.roster[attendeeId].active = false;
+      }
+      for (const attendeeId of attendeeIds) {
+        if (this.roster[attendeeId]) {
+          this.roster[attendeeId].active = true;
+          break; // only show the most active speaker
+        }
+      }
+      // TODO:
+      this.handleUpdatedRoster();
+      // this.layoutVideoTiles();
+    };
+    this.audioVideo.subscribeToActiveSpeakerDetector(
+      new DefaultActiveSpeakerPolicy(),
+      activeSpeakerHandler,
+    );
   }
 
   handleUpdatedRoster() {

@@ -12,10 +12,11 @@ let manager;
 
 export default function VideoConversationPage() {
   const { meetingId } = useParams();
-  const videoPreviewRef = useRef();
+  const videoPrimaryRef = useRef();
   const [audioVideoDidStart, setAudioVideoDidStart] = useState(false);
   const [roster, setRoster] = useState({});
   const [isVideoActive, setIsVideoActive] = useState(false);
+  const [videoTileRefs, setVideoTileRefs] = useState({});
 
   useEffect(() => {
     if (!manager) {
@@ -26,11 +27,8 @@ export default function VideoConversationPage() {
           onAudioVideoDidStart: () => { setAudioVideoDidStart(true); },
           onVideoTileDidUpdate: (tileState) => {
             const { tileId } = tileState;
-            // const tileElement = document.getElementById(`tile-${tileId}`);
-            // tileElement.style.display = 'block';
-            // const videoElement = document.getElementById(`video-${tileId}`);
-            manager.audioVideo.bindVideoElement(tileId, videoPreviewRef.current);
-            // manager.audioVideo.bindVideoElement(tileId, videoElement);
+            manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
+            console.log('onVideoTileDidUpdate', tileId);
           }
         }
       );
@@ -38,7 +36,7 @@ export default function VideoConversationPage() {
     new AsyncScheduler().start(
       async () => {
         await manager.initialize();
-        manager.audioVideo.startVideoPreviewForVideoInput(videoPreviewRef.current);
+        manager.audioVideo.startVideoPreviewForVideoInput(videoPrimaryRef.current);
       }
     );
   }, [meetingId]);
@@ -63,7 +61,7 @@ export default function VideoConversationPage() {
     new AsyncScheduler().start(
       async () => {
         await manager.join();
-        manager.audioVideo.stopVideoPreviewForVideoInput(videoPreviewRef.current);
+        manager.audioVideo.stopVideoPreviewForVideoInput(videoPrimaryRef.current);
         await manager.chooseFirstVideoInputDevice();
         manager.audioVideo.startLocalVideoTile();
       }
@@ -79,7 +77,7 @@ export default function VideoConversationPage() {
             'col-lg-6': audioVideoDidStart,
           })}
         >
-          <video id="video-preview" className="h-100 w-100" ref={videoPreviewRef} />
+          <video id="video-primary" className="h-100 w-100" ref={videoPrimaryRef} />
           {!audioVideoDidStart &&
             <div className="text-center">
               <Button
@@ -99,15 +97,11 @@ export default function VideoConversationPage() {
             >
               Toggle camera
             </Button>
+            <AttendeeList attendees={roster} />
           </div>
         }
       </div>
-      {audioVideoDidStart &&
-        <>
-          <VideoTiles />
-          <AttendeeList attendees={roster} />
-        </>
-      }
+      {audioVideoDidStart && <VideoTiles attendees={roster} />}
     </div>
   );
 }
