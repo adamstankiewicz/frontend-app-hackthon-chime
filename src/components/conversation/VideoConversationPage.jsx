@@ -32,6 +32,7 @@ export default function VideoConversationPage() {
             if (localTile) {
               manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
             } else {
+              manager.audioVideo.bindVideoElement(tileId, videoPrimaryRef.current);
               // console.log('[onVideoTileDidUpdate]', refs.current[tileId]);
               // console.log('[onVideoTileDidUpdate]', document.getElementById(`video-${tileId}`));
               // console.log('[onVideoTileDidUpdate]', tileState);
