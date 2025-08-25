@@ -31,6 +31,6 @@
     "redux": "^4.0.5"
   },
   "devDependencies": {
-    "@edx/frontend-build": "^3.0.0"
+    "@edx/frontend-build": "^13.0.14"
   }
 }
