@@ -19,7 +19,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.8.3",
     "@edx/frontend-component-header-edx": "^3.0.8",
-    "@edx/frontend-platform": "^1.1.14",
+    "@edx/frontend-platform": "^8.5.1",
     "@edx/paragon": "7.2.0",
     "amazon-chime-sdk-js": "^1.1.0",
     "classnames": "^2.2.6",
