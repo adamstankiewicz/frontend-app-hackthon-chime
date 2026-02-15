@@ -20,7 +20,7 @@
     "@babel/polyfill": "^7.8.3",
     "@edx/frontend-component-header-edx": "^3.0.8",
     "@edx/frontend-platform": "^1.1.14",
-    "@edx/paragon": "7.2.0",
+    "@edx/paragon": "21.5.6",
     "amazon-chime-sdk-js": "^1.1.0",
     "classnames": "^2.2.6",
     "qs": "^6.9.1",
